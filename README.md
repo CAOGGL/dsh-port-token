@@ -15,17 +15,10 @@ line printed at startup. Click the badge again and the panel collapses.
 
 ## What it shows
 
-```text
-collapsed                                  open
+<img src="docs/preview-en.svg" width="784" alt="The port-token panel open in the bottom-right corner of the dsh Web GUI, shown in the light and in the dark theme: a Port row, a Remote token row and a Connection URL row, each with its own Copy button.">
 
-                                     ┌──────────────────────────────
-   (🔑)                              │  This instance
-                                     │  Port    19387           [copy]
-                                     │  Token   ba7f9c…         [copy]
-                                     │  URL     http://127.0.0.1:19387/   [copy]
-                                     │  A token is a login credential — do not share it.
-   (✕) ──────────────────────────────┘
-```
+*Light and dark, at 1×. The badge lives in the shell overlay's bottom-right corner; while the panel is
+open the key has rotated into a cross. Values are illustrative — the token is truncated.*
 
 | Action | Result |
 | --- | --- |
@@ -140,6 +133,8 @@ Verified against the runtime bundled with **DeepSeek Harness Desktop 0.2.0** (`d
 | `install.ps1` | install / `-Remove` for a profile |
 | `tools/verify-host.mjs`, `tools/verify-browser.mjs` | contract and render tests |
 | `icon.svg` | the badge icon |
+| `docs/preview-en.svg`, `docs/preview-zh.svg` | the figures above — generated, not drawn by hand |
+| `tools/build-preview.mjs` | regenerates both from the panel's box math and the resolved design tokens |
 
 ## Verification
 
@@ -147,6 +142,7 @@ Verified against the runtime bundled with **DeepSeek Harness Desktop 0.2.0** (`d
 npm test                        # both suites
 node tools/verify-host.mjs      # 200 / 401 / 403 / 405 / 500, no-store, route released with the fiber
 node tools/verify-browser.mjs   # registration, slot, four render states, copy feedback, Esc, retry
+node tools/build-preview.mjs    # regenerate docs/preview-*.svg after changing the panel
 ```
 
 Both suites run offline and need no `node_modules`: the browser suite drives the component through a
@@ -174,17 +170,10 @@ DeepSeek Harness（dsh）Web 界面插件。页面**右下角**常驻一个钥�
 
 ## 显示内容
 
-```text
-收起                                       展开
+<img src="docs/preview-zh.svg" width="784" alt="dsh Web GUI 右下角展开的端口令牌面板，浅色与深色主题各一份：端口、远程令牌、连接地址三行，每行各带一个复制按钮。">
 
-                                     ┌──────────────────────────────
-   (🔑)                              │  本次启动
-                                     │  端口    19387           [复制]
-                                     │  令牌    ba7f9c…         [复制]
-                                     │  地址    http://127.0.0.1:19387/   [复制]
-                                     │  令牌等同登录凭据，请勿分享给他人。
-   (✕) ──────────────────────────────┘
-```
+*浅色与深色两套主题，1× 比例。徽标位于 shell overlay 的右下角，展开时钥匙已旋转成叉号。
+图中取值仅作示意，令牌做过截断。*
 
 | 操作 | 结果 |
 | --- | --- |
@@ -293,6 +282,8 @@ CLI 会替你维护 profile 的 `package.json`，需要 `pnpm` 在 `PATH` 上；
 | `install.ps1` | 安装 / `-Remove` |
 | `tools/verify-host.mjs`、`tools/verify-browser.mjs` | 契约测试与渲染测试 |
 | `icon.svg` | 徽标图标 |
+| `docs/preview-en.svg`、`docs/preview-zh.svg` | 上面那两张图——由脚本生成，不是手绘 |
+| `tools/build-preview.mjs` | 按面板的盒模型与设计令牌的实际取值重新生成这两张图 |
 
 ## 校验
 
@@ -300,6 +291,7 @@ CLI 会替你维护 profile 的 `package.json`，需要 `pnpm` 在 `PATH` 上；
 npm test                        # 两套一起跑
 node tools/verify-host.mjs      # 200 / 401 / 403 / 405 / 500、no-store、路由随 fiber 释放
 node tools/verify-browser.mjs   # 注册、槽位、四种渲染状态、复制反馈、Esc、重试
+node tools/build-preview.mjs    # 面板改动后重新生成 docs/preview-*.svg
 ```
 
 两套都在离线状态下运行，也不需要 `node_modules`：浏览器那套用一个手写的迷你 hook 运行时加假 DOM
