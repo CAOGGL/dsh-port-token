@@ -1,0 +1,6 @@
+# dsh-port-token bundle patch: one row mounts both halves — the Host route that
+# reports this instance's port and launch token, and the browser badge that
+# renders it in the page's bottom-right corner.
+- insert:
+    - id: port-token
+      name: "dsh-port-token"
