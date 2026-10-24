@@ -3,7 +3,7 @@
 <img src="icon.svg" width="56" align="right" alt="key badge icon">
 
 ![license](https://img.shields.io/badge/license-MIT-blue)
-![dsh](https://img.shields.io/badge/dsh-0.2.0--rc.2-4D6BFE)
+![dsh](https://img.shields.io/badge/dsh-0.2.1--rc.3-4D6BFE)
 ![node](https://img.shields.io/badge/node-%E2%89%A520-informational)
 
 A DeepSeek Harness (dsh) Web GUI plugin. One key badge sits in the bottom-right corner of the page:
@@ -59,57 +59,62 @@ anything else → read failed, with a retry button.
 
 ## Install
 
-### Desktop app (the profile this plugin was written for)
+### Desktop app
 
-The Desktop app owns its `desktop` profile — `dsh plugin --profile desktop …` exits with
-`profile "desktop" is managed exclusively by the Electron application`. Install by hand:
+`desktop` is the Electron app's own profile, and only the command the Desktop installation ships may
+manage it. The npm CLI refuses it:
 
-```powershell
-# from the repository root
-.\install.ps1                  # junction into the desktop profile + one patch row
-.\install.ps1 -Profile web     # any other profile name
+```text
+$ dsh plugin --profile desktop add github:CAOGGL/dsh-port-token
+error: profile "desktop" is managed exclusively by the Electron application
 ```
 
-Then **restart DeepSeek Harness**: the profile patch layer is composed at startup, so a new plugin
-only appears after a restart. The script makes exactly two reversible changes — the junction
-`%DSH_HOME%\profiles\<profile>\node_modules\dsh-port-token` and one `- insert:` row in that
-profile's `cordis.patch.yml`.
-
-### Manual equivalent
-
-1. Link or copy this directory to `%DSH_HOME%\profiles\<profile>\node_modules\dsh-port-token`.
-2. Append to `%DSH_HOME%\profiles\<profile>\cordis.patch.yml`:
-
-```yaml
-- insert:
-    - id: port-token
-      name: "dsh-port-token"
-```
-
-3. Restart the app.
-
-### Other profiles (standalone `dsh` CLI)
+The bundled command lives inside the installation:
 
 ```powershell
-dsh plugin --profile web add link:C:\path\to\dsh-port-token-plugin
+$dsh = "$env:LOCALAPPDATA\Programs\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd"
+& $dsh plugin --profile desktop add github:CAOGGL/dsh-port-token
+```
+
+That is the whole install. `pnpm` adds the dependency, and the CLI appends `dsh-port-token` to
+`dsh.profile.bundles` in `%DSH_HOME%\profiles\desktop\package.json` because the package declares
+`"dsh": { "bundle": { "patch": "./cordis.patch.yml" } }`. The profile's own `cordis.patch.yml` is
+left alone — the app rewrites that file with its own settings and would drop a hand-added row.
+
+**Restart DeepSeek Harness afterwards**: bundles are composed at boot, so the badge appears on the
+next start.
+
+### Local development
+
+Point the same command at your checkout instead of GitHub. `link:` keeps the profile reading the
+working copy, so edits show up without reinstalling:
+
+```powershell
+& $dsh plugin --profile desktop add link:C:\path\to\dsh-port-token-plugin
+```
+
+### Other profiles
+
+Every name except `desktop` also works with the npm CLI, as long as `pnpm` is on `PATH`:
+
+```powershell
 dsh plugin --profile web add github:CAOGGL/dsh-port-token
 ```
-
-The CLI manages the profile's `package.json` for you and needs `pnpm` on `PATH`; git-hosted
-plugins are built on install by their `prepare` script.
 
 ## Uninstall
 
 ```powershell
-.\install.ps1 -Remove
+$dsh = "$env:LOCALAPPDATA\Programs\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd"
+& $dsh plugin --profile desktop remove dsh-port-token
 ```
 
-Removes the junction (the source tree is untouched) and the patch row, then restart. Manual
-equivalent: delete the junction and the `id: port-token` row.
+Restart afterwards. The dependency and its bundle entry are gone; nothing outside the profile
+directory was touched.
 
 ## Compatibility
 
-Verified against the runtime bundled with **DeepSeek Harness Desktop 0.2.0** (`dsh 0.2.0-rc.2`):
+
+Verified against the runtime bundled with **DeepSeek Harness Desktop 0.2.1** (`dsh 0.2.1-rc.3`):
 
 - Host: `ctx.webServer.register({ kind: 'exact', path, handler })`, `ctx.webServer.port`,
   `ctx.connection.admit()`, `ctx.connection.authenticatedUrl()`, `ctx.effect()`.
@@ -130,7 +135,6 @@ Verified against the runtime bundled with **DeepSeek Harness Desktop 0.2.0** (`d
 | `lib/index.js` | host half — the `/dsh-port-token/info` route |
 | `lib/client.js` | browser half — badge, panel, styles |
 | `cordis.patch.yml` | bundle patch that mounts both halves in one row |
-| `install.ps1` | install / `-Remove` for a profile |
 | `tools/verify-host.mjs`, `tools/verify-browser.mjs` | contract and render tests |
 | `icon.svg` | the badge icon |
 | `docs/preview-en.svg`, `docs/preview-zh.svg` | the figures above — generated, not drawn by hand |
@@ -159,7 +163,7 @@ MIT © 2026 CAOGGL
 <img src="icon.svg" width="56" align="right" alt="钥匙徽标图标">
 
 ![license](https://img.shields.io/badge/license-MIT-blue)
-![dsh](https://img.shields.io/badge/dsh-0.2.0--rc.2-4D6BFE)
+![dsh](https://img.shields.io/badge/dsh-0.2.1--rc.3-4D6BFE)
 ![node](https://img.shields.io/badge/node-%E2%89%A520-informational)
 
 DeepSeek Harness（dsh）Web 界面插件。页面**右下角**常驻一个钥匙徽标：点一下弹出面板，显示
@@ -211,55 +215,59 @@ DeepSeek Harness（dsh）Web 界面插件。页面**右下角**常驻一个钥�
 
 ## 安装
 
-### 桌面端（本插件面向的 profile）
+### 桌面端
 
-桌面端的 `desktop` profile 由 Electron 应用独占管理——`dsh plugin --profile desktop …` 会直接报
-`profile "desktop" is managed exclusively by the Electron application`。所以用手工方式：
+`desktop` 是 Electron 应用自己的 profile，只有桌面端自带的那条命令能管理它。npm 装的那个 `dsh` 会被
+直接拒绝：
 
-```powershell
-# 在仓库根目录执行
-.\install.ps1                  # 建目录联接 + 写一行 patch
-.\install.ps1 -Profile web     # 换成其他 profile 名
+```text
+$ dsh plugin --profile desktop add github:CAOGGL/dsh-port-token
+error: profile "desktop" is managed exclusively by the Electron application
 ```
 
-然后**重启 DeepSeek Harness**：profile 的 patch 层只在启动时组合，新插件要重启后才会出现。脚本只做两件
-可逆的事——目录联接 `%DSH_HOME%\profiles\<profile>\node_modules\dsh-port-token`，以及该 profile
-`cordis.patch.yml` 里的一行 `- insert:`。
-
-### 手工等价操作
-
-1. 把本目录联接或复制到 `%DSH_HOME%\profiles\<profile>\node_modules\dsh-port-token`。
-2. 在 `%DSH_HOME%\profiles\<profile>\cordis.patch.yml` 末尾追加：
-
-```yaml
-- insert:
-    - id: port-token
-      name: "dsh-port-token"
-```
-
-3. 重启应用。
-
-### 其他 profile（独立 `dsh` CLI）
+能管理它的命令在安装目录里：
 
 ```powershell
-dsh plugin --profile web add link:C:\path\to\dsh-port-token-plugin
+$dsh = "$env:LOCALAPPDATA\Programs\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd"
+& $dsh plugin --profile desktop add github:CAOGGL/dsh-port-token
+```
+
+这就是全部。`pnpm` 装依赖，CLI 随后把 `dsh-port-token` 追加进
+`%DSH_HOME%\profiles\desktop\package.json` 的 `dsh.profile.bundles`——因为包里声明了
+`"dsh": { "bundle": { "patch": "./cordis.patch.yml" } }`。profile 自己的 `cordis.patch.yml` 完全
+不动：那个文件归应用管，应用写自己的设置时会把手写的行丢掉。
+
+**装完重启 DeepSeek Harness**：bundle 在启动时组合，徽标要下一次启动才出现。
+
+### 本地开发
+
+把同一个命令指向本地检出即可。`link:` 让 profile 直接读工作副本，改代码不用重装：
+
+```powershell
+& $dsh plugin --profile desktop add link:C:\path\to\dsh-port-token-plugin
+```
+
+### 其他 profile
+
+除 `desktop` 以外的名字用 npm 版 CLI 就行，前提是 `pnpm` 在 `PATH` 上：
+
+```powershell
 dsh plugin --profile web add github:CAOGGL/dsh-port-token
 ```
-
-CLI 会替你维护 profile 的 `package.json`，需要 `pnpm` 在 `PATH` 上；来自 git 的插件在安装时用
-`prepare` 脚本构建。
 
 ## 卸载
 
 ```powershell
-.\install.ps1 -Remove
+$dsh = "$env:LOCALAPPDATA\Programs\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd"
+& $dsh plugin --profile desktop remove dsh-port-token
 ```
 
-删掉目录联接（源码目录不受影响）和那行 patch，然后重启。手工等价操作：删掉联接和 `id: port-token` 那一行。
+然后重启。依赖和它在 bundles 里的那一项都会消失，profile 目录之外没有改动。
 
 ## 兼容性
 
-对着 **DeepSeek Harness 桌面端 0.2.0**（内置 `dsh 0.2.0-rc.2`）的真实运行时代码验证过：
+
+对着 **DeepSeek Harness 桌面端 0.2.1**（内置 `dsh 0.2.1-rc.3`）的真实运行时代码验证过：
 
 - 宿主侧：`ctx.webServer.register({ kind: 'exact', path, handler })`、`ctx.webServer.port`、
   `ctx.connection.admit()`、`ctx.connection.authenticatedUrl()`、`ctx.effect()`。
@@ -279,7 +287,6 @@ CLI 会替你维护 profile 的 `package.json`，需要 `pnpm` 在 `PATH` 上；
 | `lib/index.js` | 宿主半边——`/dsh-port-token/info` 路由 |
 | `lib/client.js` | 浏览器半边——徽标、面板、样式 |
 | `cordis.patch.yml` | 用一行挂载两个半边的 bundle patch |
-| `install.ps1` | 安装 / `-Remove` |
 | `tools/verify-host.mjs`、`tools/verify-browser.mjs` | 契约测试与渲染测试 |
 | `icon.svg` | 徽标图标 |
 | `docs/preview-en.svg`、`docs/preview-zh.svg` | 上面那两张图——由脚本生成，不是手绘 |

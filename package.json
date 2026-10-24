@@ -16,7 +16,6 @@
     "lib/index.js",
     "lib/client.js",
     "cordis.patch.yml",
-    "install.ps1",
     "icon.svg",
     "README.md"
   ],
